@@ -1,3 +1,4 @@
+
 __author__ = 'rockie yang'
 
 import os
@@ -5,36 +6,47 @@ from os import path, listdir
 from hanzi2pinyin import hanzi2pinyin
 
 def name_converter(old):
-    return hanzi2pinyin(old)
+    pinyin = hanzi2pinyin(old)
+    remove_unconverted_chars = pinyin.encode('ascii', 'ignore').decode('ascii')
+
+    return remove_unconverted_chars
 
 
 def tranform(root_path, the_path):
-    for sub_path in listdir(the_path):
+    m3u_file = os.path.join(root_path, the_path + ".m3u")
 
-        if os.path.isdir(sub_path):
-            new_path = name_converter(sub_path)
+    with open(m3u_file, "w") as m3u:
 
+        for sub_path in listdir(the_path):
             old_full_path = os.path.join(the_path, sub_path)
-            new_full_path = os.path.join(the_path, new_path)
 
-            print(sub_path, new_path)
-            os.rename(old_full_path,
-                      new_full_path)
+            if os.path.isdir(old_full_path):
+                new_path = name_converter(sub_path)
 
-            tranform(root_path, os.path.join(the_path, new_path))
+                new_full_path = os.path.join(the_path, new_path)
 
-        elif sub_path.lower().endswith(".mp3"):
-            new_path = name_converter(sub_path)
-            old_full_path = os.path.join(the_path, sub_path)
-            new_full_path = os.path.join(the_path, new_path)
+                print(sub_path, new_path)
+                if old_full_path != new_full_path:
+                    os.rename(old_full_path,
+                              new_full_path)
 
-            print(sub_path, new_path)
-            if old_full_path != new_full_path:
-                os.rename(old_full_path,
-                          new_full_path)
+                tranform(root_path, os.path.join(the_path, new_path))
 
-            with open(the_path + ".m3u", "a+") as m3u:
-                m3u.write(new_full_path)
+            elif sub_path.lower().endswith(".mp3"):
+                new_path = name_converter(sub_path)
+                old_full_path = os.path.join(the_path, sub_path)
+                new_full_path = os.path.join(the_path, new_path)
+
+                print(root_path, new_full_path)
+                if old_full_path != new_full_path:
+                    os.rename(old_full_path,
+                              new_full_path)
+
+                try:
+                    m3u.write(new_full_path[(len(root_path) + 1):])
+                    m3u.write('\n')
+                except Exception as ex:
+                    print('could not write', new_full_path, ex)
 
 #
 # def tranform(sourcePath):
@@ -53,7 +65,8 @@ def tranform(root_path, the_path):
 #         #         print (filename) #os.path.join(dirname, filename)
 
 
-tranform(unicode("/Users/yangyoujiang/Music/music"), unicode("/Users/yangyoujiang/Music/music"))
+tranform(u"/Users/yangyoujiang/Music/music",
+         u"/Users/yangyoujiang/Music/music")
 
 
 #
